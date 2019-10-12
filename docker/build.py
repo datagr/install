@@ -107,10 +107,20 @@ def make_enable(flow_prefix):
         f.write("""
 #!/bin/bash
 
+# Before using the flow installation you must make sure the runtime linker can
+# find the shared libraries shipped with the flow distribution. The simplest
+# way to achieve that is to set the LD_LIBRARY_PATH environment variable to
+# include the directory $root/{}/usr/lib64. That can be achieved by sourcing
+# this enable script.
+#
+# As a post install step this script must be edited, by updating the root
+# variable to point to the file system location where the tar package was
+# unpacked.
+
 root=
 export LD_LIBRARY_PATH=${{root}}/{}/usr/lib64:$LD_LIBRARY_PATH
 export PATH=${{root}}/{}/usr/bin:$PATH
-""".format(flow_prefix, flow_prefix))
+""".format(flow_prefix, flow_prefix, flow_prefix))
 
 
 def copy_data(src_path, target_path):
