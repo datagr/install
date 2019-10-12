@@ -1,4 +1,0 @@
-FROM centos:7
-COPY usr /install/usr
-ENV LD_LIBRARY_PATH /install/usr/lib64:/install/usr/lib64/atlas
-ENV PATH /install/usr/bin:$PATH

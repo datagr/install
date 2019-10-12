@@ -1,5 +1,0 @@
-FROM centos:7
-RUN yum -y update
-RUN yum-config-manager --add-repo https://www.opm-project.org/package/opm.repo
-RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-RUN yum install -y opm-simulators-bin

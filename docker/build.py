@@ -11,6 +11,8 @@ import shutil
 @contextmanager
 def pushd(path):
     cwd = os.getcwd()
+    if not os.path.isdir(path):
+        os.makedirs(path)
     os.chdir(path)
 
     yield
@@ -27,7 +29,10 @@ def tmpd():
     yield
 
     os.chdir(cwd)
-    #shutil.rmtree(tmp)
+    try:
+        shutil.rmtree(tmp)
+    except OSError:
+        sys.stderr.write("Failed to clean up: {} - must run as root to clean\n".format(tmp))
 
 
 def cmd(cmd_string, verbose = False):
@@ -41,8 +46,9 @@ def cmd(cmd_string, verbose = False):
     return stdout
 
 
-def build(docker_file):
-    tag = os.path.basename(docker_file)
+def docker_build(docker_file, tag = None):
+    if tag is None:
+        tag = os.path.basename(docker_file)
     cmd("docker build -f {} -t {} .".format(docker_file, tag), verbose=True)
     return tag
 
@@ -84,7 +90,7 @@ COPY extract_files.py extract_files.py
 COPY file_list.txt file_list.txt
 ENTRYPOINT ["./extract_files.py", "file_list.txt", "{}"]
 """.format(base_image, "/install"))
-        build("extract")
+        docker_build("extract")
         cmd("docker run -v {}:/install extract".format(target_path), verbose = True)
 
 
@@ -96,14 +102,32 @@ def make_tarfile(flow_prefix):
     return os.path.join("/tmp/", tar_file)
 
 
+def make_enable(flow_prefix):
+    with open("{}/enable".format(flow_prefix), "w") as f:
+        f.write("""
+#!/bin/bash
+
+root=
+export LD_LIBRARY_PATH=${{root}}/{}/usr/lib64:$LD_LIBRARY_PATH
+export PATH=${{root}}/{}/usr/bin:$PATH
+""".format(flow_prefix, flow_prefix))
+
+
+def copy_data(src_path, target_path):
+    shutil.copytree(src_path, target_path)
+
+
+
 script_path = os.path.abspath( os.path.dirname(__file__) )
 flow_version = "2019.04"
+os_image = "centos-7"
 
-fetch_file = os.path.join(script_path, "centos-7-fetch-{}".format(flow_version))
-install_file = os.path.join(script_path, "centos-7-install-{}".format(flow_version))
+fetch_file = os.path.join(script_path, "dockerfiles/{}/fetch".format(os_image))
+install_file = os.path.join(script_path, "dockerfiles/{}/install".format(os_image))
 extract_script = os.path.join(script_path, "extract_files.py")
+data_path = os.path.join(script_path, "testdata")
 
-fetch_id = build(fetch_file)
+fetch_id = docker_build(fetch_file)
 
 with tmpd():
     cmd("docker save {} -o {}.tar".format(fetch_id, fetch_id))
@@ -113,7 +137,9 @@ with tmpd():
     with tmpd():
         flow_prefix = "flow-{}".format(flow_version)
         extract_files(fetch_id, extract_script, files, os.path.join( os.getcwd(), flow_prefix))
+        make_enable(flow_prefix)
+        copy_data(data_path, "{}/testdata".format(flow_prefix))
         tar_file = make_tarfile(flow_prefix)
-        print("Tar file: {}".format(tar_file))
+        print("Tar file: {} created".format(tar_file))
         with pushd(flow_prefix):
-            build(install_file)
+            docker_build(install_file, "{}-{}".format(os_image, flow_version))
