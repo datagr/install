@@ -118,9 +118,9 @@ def make_enable(flow_prefix):
 # unpacked.
 
 root=
-export LD_LIBRARY_PATH=${{root}}/{}/usr/lib64:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=${{root}}/{}/usr/lib64:${{root}}/{}/usr/lib64/atlas/$LD_LIBRARY_PATH
 export PATH=${{root}}/{}/usr/bin:$PATH
-""".format(flow_prefix, flow_prefix, flow_prefix))
+""".format(flow_prefix, flow_prefix, flow_prefix, flow_prefix))
 
 
 def copy_data(src_path, target_path):
@@ -153,3 +153,7 @@ with tmpd():
         print("Tar file: {} created".format(tar_file))
         with pushd(flow_prefix):
             docker_build(install_file, "{}-{}".format(os_image, flow_version))
+
+
+# gsutil acl ch -u AllUsers:R gs://datagr-export/flow-2019.04.tar.gz
+# https://storage.googleapis.com/datagr-export/flow-2019.04.tar.gz
