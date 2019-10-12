@@ -155,5 +155,6 @@ with tmpd():
             docker_build(install_file, "{}-{}".format(os_image, flow_version))
 
 
+# gsutil cp /tmp/flow-2019.04.tar.gz gs://datagr-export
 # gsutil acl ch -u AllUsers:R gs://datagr-export/flow-2019.04.tar.gz
 # https://storage.googleapis.com/datagr-export/flow-2019.04.tar.gz

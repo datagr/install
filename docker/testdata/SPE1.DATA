@@ -399,7 +399,7 @@ COMPDAT
 -- the radius is given to be 0.25ft in Odeh's paper
 
 
-XWCONPROD
+WCONPROD
 -- Item #:1	2      3     4	   5  9
 	'PROD' 'OPEN' 'ORAT' 20000 4* 1000 /
 /
