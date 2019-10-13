@@ -14,4 +14,4 @@ export LD_LIBRARY_PATH=${{root}}/{flow_prefix}/usr/lib64:${{root}}/{flow_prefix}
 # Update the PATH variable to contain the location of the flow binary. Observe
 # that flow versions compiled with and without MPI support should not coexist in
 # PATH.
-export PATH=${{root}}/usr/bin:$PATH
+export PATH=${{root}}/{flow_prefix}/usr/bin:$PATH

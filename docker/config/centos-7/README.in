@@ -28,7 +28,7 @@ usr/: The usr folder is the root of the flow binary distribution, the usr folder
 Running scalar flow: Assuming that the $root variable in the enable script has
 been correctly updated flow can be run as follows:
 
-   bash% source {flow-prefix}/enable
+   bash% source {flow_prefix}/enable
    bash% flow {flow_prefix}/testdata/SPE1.DATA
 
 Oberve that two different versions of flow are compiled, one with MPI support
