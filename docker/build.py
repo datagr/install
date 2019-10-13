@@ -127,7 +127,8 @@ def make_enable(config, flow_prefix):
 def make_README(config, flow_prefix):
     template = open(config.readme_in).read()
     with open("{}/README".format(flow_prefix), "w") as f:
-        f.write(template.format(version = config.version))
+        f.write(template.format(version = config.version,
+                                flow_prefix = flow_prefix))
 
 
 def copy_data(src_path, target_path):

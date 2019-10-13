@@ -1,17 +1,41 @@
 flow {version}
 ==============
+This is a binary distribution of flow version {version} along with the required
+support libraries.
 
 
-enable: The file enable is a small shell script which can be used to
+enable: The file enable is a small shell script which can be used to initialize
+   the environment for flow. This file must be edited manually by the system
+   administator after unpacking the tar distribution. The enable script updates
+   the LD_LIBRARY_PATH and PATH environment variables, there is nothing special
+   about the enable script, and if desirable the environment can be manipulated
+   in a different fashion.
 
 
-tesdata: 
+tesdata/: The testdata folder contains two testcases which can be used to test
+   the flow installation, the case SPE1.DATA which is a very small testcase, and
+   norne/NORNE_ATW2013 which is a real model for the Norne field contributed for
+   open distributiond by Equinor ASA.
 
 
-Running scalar flow:
+usr/: The usr folder is the root of the flow binary distribution, the usr folder
+    contains the "normal" lib64/ and bin/ subfolders with shared libraries and
+    executable respectively. The purpose of the enable script is to ensure that
+    the shell and runtime linker finds the binaries and libraries located in the
+    usr/ folder correctly.
 
 
-Running flow with mpi:
+Running MPI flow: The parallell version of flow is copmiled with openmpi, and
+the openmpi distribution must be installed on the cluster before parallell flow
+can be invoked. Assuming that the $root variable in the enable script has been
+correctly updated flow can be run as follows:
+
+   bash% source {flow-prefix}/enable
+   bash% mpirun -np 4 flow {flow_prefix}/testdata/norne/NORNE_ATW2013.DATA
+
+Oberve that two different versions of flow are compiled, one with MPI support
+and one without. The two binaries are both named 'flow', it is therefor
+important that not both are in PATH simultaneously.
 
 
 
