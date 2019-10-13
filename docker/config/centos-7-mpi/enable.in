@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# The path to the root flow distribution - not including the {flow_prefix} part.
+# This variable must be set by the system administrator installing flow in a
+# manual post install step.
+root=
+
+
+# Update the LD_LIBRARY_PATH variable to contain the path to the shared
+# libraries used by the MPI enabled flow binary.
+export LD_LIBRARY_PATH=${{root}}/{flow_prefix}/usr/lib64:${{root}}/{flow_prefix}/usr/lib64/atlas:${{root}}/{flow_prefix}/usr/lib64/openmpi/lib:$LD_LIBRARY_PATH
+
+
+# Update the PATH variable to contain the location of the MPI enabled flow
+# binary. Observe that flow versions compiled with and without MPI support
+# should not coexist in PATH.
+export PATH=${{root}}/{flow_prefix}/usr/lib64/openmpi/bin:$PATH

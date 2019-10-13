@@ -3,10 +3,11 @@ import json
 import subprocess
 import shlex
 import sys
-from contextlib import contextmanager
 import tempfile
 import os
 import shutil
+import yaml
+from contextlib import contextmanager
 
 @contextmanager
 def pushd(path):
@@ -33,6 +34,21 @@ def tmpd():
         shutil.rmtree(tmp)
     except OSError:
         sys.stderr.write("Failed to clean up: {} - must run as root to clean\n".format(tmp))
+
+
+class Config(object):
+
+    def __init__(self, fname):
+        config_data = yaml.safe_load(open(fname))
+        with pushd(os.path.dirname(fname)):
+            self.fetch_file = os.path.abspath(config_data["dockerfile"]["fetch"])
+            self.install_file = os.path.abspath(config_data["dockerfile"]["install"])
+            self.enable_in = os.path.abspath(config_data["enable"])
+            self.readme_in = os.path.abspath(config_data["README"])
+
+        self.os_image = config_data["os_image"]
+        self.mpi = config_data["mpi"]
+        self.version = config_data["version"]
 
 
 def cmd(cmd_string, verbose = False):
@@ -102,42 +118,51 @@ def make_tarfile(flow_prefix):
     return os.path.join("/tmp/", tar_file)
 
 
-def make_enable(flow_prefix):
+def make_enable(config, flow_prefix):
+    template = open(config.enable_in).read()
     with open("{}/enable".format(flow_prefix), "w") as f:
-        f.write("""
-#!/bin/bash
+        f.write(template.format(flow_prefix = flow_prefix))
 
-# Before using the flow installation you must make sure the runtime linker can
-# find the shared libraries shipped with the flow distribution. The simplest
-# way to achieve that is to set the LD_LIBRARY_PATH environment variable to
-# include the directory $root/{}/usr/lib64. That can be achieved by sourcing
-# this enable script.
-#
-# As a post install step this script must be edited, by updating the root
-# variable to point to the file system location where the tar package was
-# unpacked.
 
-root=
-export LD_LIBRARY_PATH=${{root}}/{}/usr/lib64:${{root}}/{}/usr/lib64/atlas/$LD_LIBRARY_PATH
-export PATH=${{root}}/{}/usr/bin:$PATH
-""".format(flow_prefix, flow_prefix, flow_prefix, flow_prefix))
+def make_README(config, flow_prefix):
+    template = open(config.readme_in).read()
+    with open("{}/README".format(flow_prefix), "w") as f:
+        f.write(template.format(version = config.version))
 
 
 def copy_data(src_path, target_path):
     shutil.copytree(src_path, target_path)
 
 
+def print_msg(tar_file):
+    msg = """
+Push tar file to google storage:
+
+    gsutil cp {0} gs://datagr-export
+
+Make file public:
+
+    gsutil acl ch -u AllUsers:R gs://datagr-export/{1}
+
+URL:
+
+    https://storage.googleapis.com/datagr-export/{1}
+""".format(tar_file, os.path.basename(tar_file))
+    print(msg)
+
+
 
 script_path = os.path.abspath( os.path.dirname(__file__) )
-flow_version = "2019.04"
-os_image = "centos-7"
+config = Config(sys.argv[1])
+if config.mpi:
+    flow_version = "2019.04-mpi"
+else:
+    flow_version = "2019.04"
 
-fetch_file = os.path.join(script_path, "dockerfiles/{}/fetch".format(os_image))
-install_file = os.path.join(script_path, "dockerfiles/{}/install".format(os_image))
 extract_script = os.path.join(script_path, "extract_files.py")
 data_path = os.path.join(script_path, "testdata")
 
-fetch_id = docker_build(fetch_file)
+fetch_id = docker_build(config.fetch_file)
 
 with tmpd():
     cmd("docker save {} -o {}.tar".format(fetch_id, fetch_id))
@@ -147,14 +172,13 @@ with tmpd():
     with tmpd():
         flow_prefix = "flow-{}".format(flow_version)
         extract_files(fetch_id, extract_script, files, os.path.join( os.getcwd(), flow_prefix))
-        make_enable(flow_prefix)
+        make_enable(config, flow_prefix)
+        make_README(config, flow_prefix)
         copy_data(data_path, "{}/testdata".format(flow_prefix))
         tar_file = make_tarfile(flow_prefix)
         print("Tar file: {} created".format(tar_file))
         with pushd(flow_prefix):
-            docker_build(install_file, "{}-{}".format(os_image, flow_version))
+            docker_build(config.install_file, "{}-{}".format(config.os_image, flow_version))
 
+print_msg(tar_file)
 
-# gsutil cp /tmp/flow-2019.04.tar.gz gs://datagr-export
-# gsutil acl ch -u AllUsers:R gs://datagr-export/flow-2019.04.tar.gz
-# https://storage.googleapis.com/datagr-export/flow-2019.04.tar.gz

@@ -1,0 +1,7 @@
+dockerfile:
+  fetch: fetch
+  install: install
+
+os_image: "centos-7"
+mpi: false 
+version : 2019.04
