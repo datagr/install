@@ -9,6 +9,37 @@ import shutil
 import yaml
 from contextlib import contextmanager
 
+# The purpose of this script is to generate a tar file distribution of
+# opm/flow. The script is based on docker, and the functionality can be briefly
+# summarized as follows:
+#
+#  1. Start with a plain docker image for e.g. Centos or Ubuntu, and then build
+#     a new image by running the equivalent of "apt-get install opm".
+#
+#  2. On the newly created image we run the command "docker save" which will
+#     extract the layers in the docker image, from this we can identify the
+#     layer which actually installs flow, and then get a listing of all the
+#     files in that layer - these are the files we are interested in.
+#
+#  3. To actually extract the interesting files from the docker image we need
+#     to start a docker container which mounts an outside path and then run a
+#     script inside the container which copies all the interesting files to the
+#     externally visible path.
+#
+#     Observe that the script also creates a docker image which can be
+#     installed, that is not actually used.
+#
+#  4. Finally the script creates a small README and a small enable script,
+#     copies in two folders of testdata and packs everything in .tar.gz file.
+#
+# The behaviour of the script is goverened by a small config file, which is
+# given as commandline argument. This config file should contain the path to
+# dockerfiles and template files for the enable script and readme files.
+# Currently the configurations are organized with one complete configuration in
+# a directory by itself.
+
+
+
 @contextmanager
 def pushd(path):
     cwd = os.getcwd()
@@ -36,6 +67,17 @@ def tmpd():
         sys.stderr.write("Failed to clean up: {} - must run as root to clean\n".format(tmp))
 
 
+def cmd(cmd_string, verbose = False):
+    if verbose:
+        print(cmd_string)
+
+    stdout = subprocess.check_output( shlex.split(cmd_string))
+
+    if verbose:
+        print(stdout)
+    return stdout
+
+
 class Config(object):
 
     def __init__(self, fname):
@@ -49,17 +91,6 @@ class Config(object):
         self.os_image = config_data["os_image"]
         self.mpi = config_data["mpi"]
         self.version = config_data["version"]
-
-
-def cmd(cmd_string, verbose = False):
-    if verbose:
-        print(cmd_string)
-
-    stdout = subprocess.check_output( shlex.split(cmd_string))
-
-    if verbose:
-        print(stdout)
-    return stdout
 
 
 def docker_build(docker_file, tag = None):
@@ -163,16 +194,28 @@ else:
 extract_script = os.path.join(script_path, "extract_files.py")
 data_path = os.path.join(script_path, "testdata")
 
+# Create the main docker image where opm/flow is installed.
 fetch_id = docker_build(config.fetch_file)
 
 with tmpd():
+    # Export the content of the docker image to a tar file and unpack that
+    # file. The tar file will unpack to a list of new tar files, one for each layer.
     cmd("docker save {} -o {}.tar".format(fetch_id, fetch_id))
     cmd("tar -xvf {}.tar".format(fetch_id), verbose=True)
+
+    # Inspect the layer metadata and find the layer which has actually
+    # installed opm/flow.
     layer_id = find_layer("opm-simulators-")
+
+    # Make a list of all the files with prefix /usr from the layer where
+    # opm/flow is installed
     files = installed_files(layer_id, "usr")
     with tmpd():
         flow_prefix = "flow-{}".format(flow_version)
+        # Run a docker container with a script to pull out all the files in the
+        # list created by installed_files().
         extract_files(fetch_id, extract_script, files, os.path.join( os.getcwd(), flow_prefix))
+
         make_enable(config, flow_prefix)
         make_README(config, flow_prefix)
         copy_data(data_path, "{}/testdata".format(flow_prefix))
