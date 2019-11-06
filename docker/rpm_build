@@ -85,14 +85,6 @@ ENTRYPOINT ["./extract_files.py", "file_list.txt", "{}"]
         build.util.cmd("docker run -v {}:/install extract".format(target_path), verbose = True)
 
 
-
-def make_tarfile(flow_prefix):
-    tar_file = "{}.tar.gz".format(flow_prefix)
-    build.util.cmd("tar -czf {} {}".format(tar_file, flow_prefix))
-    shutil.copy(tar_file, "/tmp")
-    return os.path.join("/tmp/", tar_file)
-
-
 def make_enable(config, flow_prefix):
     template = open(config.enable_in).read()
     with open("{}/enable".format(flow_prefix), "w") as f:
@@ -163,7 +155,7 @@ with build.util.tmpd():
         make_enable(config, flow_prefix)
         make_README(config, flow_prefix)
         copy_data(data_path, "{}/testdata".format(flow_prefix))
-        tar_file = make_tarfile(flow_prefix)
+        tar_file = build.util.make_tarfile(flow_prefix)
         print("Tar file: {} created".format(tar_file))
         with build.util.pushd(flow_prefix):
             build.docker.build(config.install_file, "{}-{}".format(config.os_image, flow_version))
