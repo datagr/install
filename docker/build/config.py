@@ -8,7 +8,7 @@ class Config(object):
     def __init__(self, fname):
         config_data = yaml.safe_load(open(fname))
         with pushd(os.path.dirname(fname)):
-            self.fetch_file = os.path.abspath(config_data["dockerfile"]["fetch"])
+            self.base_file = os.path.abspath(config_data["dockerfile"]["base"])
             self.install_file = os.path.abspath(config_data["dockerfile"]["install"])
             self.enable_in = os.path.abspath(config_data["enable"])
             self.readme_in = os.path.abspath(config_data["README"])

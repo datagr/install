@@ -1,5 +1,5 @@
 dockerfile:
-  fetch: fetch
+  base: base
   install: install
 
 os_image: "centos-7"

@@ -1,5 +1,5 @@
 dockerfile:
-  fetch: fetch
+  base: base
   install: install
 
 enable: enable.in

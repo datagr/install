@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import json
 import sys
 import os
 import shutil
@@ -40,49 +39,6 @@ import build.docker
 # a directory by itself.
 
 
-
-
-
-
-def find_layer(cmd_string):
-    for path in os.listdir(os.getcwd()):
-        if not os.path.isdir(path):
-            continue
-
-        json_file = os.path.join(path, "json")
-        metadata = json.load(open(json_file))
-        build_cmd = metadata["container_config"]["Cmd"]
-        if build_cmd:
-            for arg in build_cmd:
-                if cmd_string in arg:
-                    return path
-
-
-
-def installed_files(layer_id, prefix):
-    tar_output = build.util.cmd("tar -xvf {}/layer.tar".format(layer_id))
-    return filter( lambda x: x.startswith(prefix), tar_output.split())
-
-
-def extract_files(base_image, extract_script, file_list, target_path):
-    if not os.path.isdir(target_path):
-        os.makedirs(target_path)
-
-    with build.util.pushd("/tmp/extract"):
-        shutil.copy(extract_script, os.path.join(os.getcwd(), "extract_files.py"))
-        with open("file_list.txt", "w") as fh:
-            for fn in file_list:
-                fh.write(fn + "\n")
-
-        with open("extract","w") as f:
-            f.write("""
-FROM {}
-COPY extract_files.py extract_files.py
-COPY file_list.txt file_list.txt
-ENTRYPOINT ["./extract_files.py", "file_list.txt", "{}"]
-""".format(base_image, "/install"))
-        build.docker.build("extract")
-        build.util.cmd("docker run -v {}:/install extract".format(target_path), verbose = True)
 
 
 def make_enable(config, flow_prefix):
@@ -127,30 +83,20 @@ if config.mpi:
 else:
     flow_version = "2019.04"
 
-extract_script = os.path.join(script_path, "extract_files.py")
 data_path = os.path.join(script_path, "testdata")
 
 # Create the main docker image where opm/flow is installed.
-fetch_id = build.docker.build(config.fetch_file)
+base_id = build.docker.build(config.base_file)
 
 with build.util.tmpd():
-    # Export the content of the docker image to a tar file and unpack that
-    # file. The tar file will unpack to a list of new tar files, one for each layer.
-    build.util.cmd("docker save {} -o {}.tar".format(fetch_id, fetch_id))
-    build.util.cmd("tar -xvf {}.tar".format(fetch_id), verbose=True)
-
-    # Inspect the layer metadata and find the layer which has actually
-    # installed opm/flow.
-    layer_id = find_layer("opm-simulators-")
-
     # Make a list of all the files with prefix /usr from the layer where
     # opm/flow is installed
-    files = installed_files(layer_id, "usr")
+    files = build.docker.installed_files(base_id, "opm-simulators-", build.docker.prefix_usr)
     with build.util.tmpd():
         flow_prefix = "flow-{}".format(flow_version)
         # Run a docker container with a script to pull out all the files in the
         # list created by installed_files().
-        extract_files(fetch_id, extract_script, files, os.path.join( os.getcwd(), flow_prefix))
+        build.docker.extract_files(base_id, files, os.path.join( os.getcwd(), flow_prefix))
 
         make_enable(config, flow_prefix)
         make_README(config, flow_prefix)
