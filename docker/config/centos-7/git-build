@@ -1,0 +1,3 @@
+FROM git-image
+COPY build.sh build.sh
+CMD ./build.sh

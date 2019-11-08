@@ -1,0 +1,12 @@
+FROM centos:7
+RUN yum -y update
+RUN yum install -y centos-release-scl
+RUN yum install -y devtoolset-7
+RUN yum install -y cmake
+RUN yum install -y git
+RUN yum install -y epel-release
+RUN yum install -y boost boost-devel
+
+RUN yum-config-manager --add-repo https://www.opm-project.org/package/opm.repo
+RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+RUN yum install -y dune-common dune-geometry dune-grid dune-localfunctions
