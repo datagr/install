@@ -1,0 +1,11 @@
+dockerfile:
+  base: git-image 
+  install: install
+
+os_image: "centos-7"
+mpi: false 
+version : 2019.04
+
+enable: enable.in
+README: README.in
+
