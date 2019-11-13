@@ -41,39 +41,6 @@ import build.docker
 
 
 
-def make_enable(config, flow_prefix):
-    template = open(config.enable_in).read()
-    with open("{}/enable".format(flow_prefix), "w") as f:
-        f.write(template.format(flow_prefix = flow_prefix))
-
-
-def make_README(config, flow_prefix):
-    template = open(config.readme_in).read()
-    with open("{}/README".format(flow_prefix), "w") as f:
-        f.write(template.format(version = config.version,
-                                flow_prefix = flow_prefix))
-
-
-def copy_data(src_path, target_path):
-    shutil.copytree(src_path, target_path)
-
-
-def print_msg(tar_file):
-    msg = """
-Push tar file to google storage:
-
-    gsutil cp {0} gs://datagr-export
-
-Make file public:
-
-    gsutil acl ch -u AllUsers:R gs://datagr-export/{1}
-
-URL:
-
-    https://storage.googleapis.com/datagr-export/{1}
-""".format(tar_file, os.path.basename(tar_file))
-    print(msg)
-
 
 
 script_path = os.path.abspath( os.path.dirname(__file__) )
@@ -98,13 +65,13 @@ with build.util.tmpd():
         # list created by installed_files().
         build.docker.extract_files(base_id, files, os.path.join( os.getcwd(), flow_prefix))
 
-        make_enable(config, flow_prefix)
-        make_README(config, flow_prefix)
-        copy_data(data_path, "{}/testdata".format(flow_prefix))
+        build.util.make_enable(config, flow_prefix)
+        build.util.make_README(config, flow_prefix)
+        build.util.copy_data(data_path, "{}/testdata".format(flow_prefix))
         tar_file = build.util.make_tarfile(flow_prefix)
         print("Tar file: {} created".format(tar_file))
         with build.util.pushd(flow_prefix):
             build.docker.build(config.install_file, "{}-{}".format(config.os_image, flow_version))
 
-print_msg(tar_file)
+build.util.print_msg(tar_file)
 

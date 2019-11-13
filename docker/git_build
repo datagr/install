@@ -2,13 +2,15 @@
 import sys
 import os
 import shutil
+import tempfile
 from contextlib import contextmanager
+from argparse import ArgumentParser
 
 import build
 import build.util
 import build.docker
 
-repo_list = ["opm-common", "opm-material", "opm-models", "opm-simulators"]
+repo_list = ["opm-common", "opm-material", "opm-grid", "opm-models", "opm-simulators"]
 
 
 def clone():
@@ -20,17 +22,64 @@ def clone():
 
 
 
+def include_file(arg):
+    if arg.startswith("usr"):
+        return True
+
+    if arg.startswith("lib64/libquadmath"):
+        return True
+
+    return False
 
 
-config = build.Config(sys.argv[1])
+parser = ArgumentParser()
+parser.add_argument("config_file")
+parser.add_argument("--build", type=str)
+args = parser.parse_args()
+
+script_path = os.path.abspath( os.path.dirname(__file__) )
+data_path = os.path.join(script_path, "testdata")
+
+config = build.Config(args.config_file)
 base_id = build.docker.build(config.base_file)
 
+if args.build:
+    if not os.path.isdir(args.build):
+        os.makedirs(args.build)
 
-with build.util.tmpd():
-    os.mkdir("build")
+    build_root = args.build
+else:
+    build_root = tempfile.mkdtemp()
+
+
+with build.util.pushd(build_root):
+    with build.util.tmpd():
+        files = build.docker.installed_files(base_id, "dune-", include_file)
+
+    files.append("lib64")
+    files.append("lib64/libquadmath.so.0.0.0")
+    files.append("lib64/libquadmath.so.0")
+
+    if not os.path.isdir("build"):
+        os.mkdir("build")
+
     with build.util.pushd("build"):
         clone()
 
-    copy build.sh down here 
-    build_id = build.docker.build("/home/hove/work/datagr/script/docker/config/centos-7/git-build")
-    docker.run(build_id, [("build", "/build")])
+    shutil.copy(config.build_script, os.getcwd())
+    build_id = build.docker.build( config.build_file )
+
+    flow_prefix = "flow-install"
+    os.mkdir(flow_prefix)
+    build.docker.run(build_id, [(os.path.abspath("build"), "/build"),
+                                (os.path.abspath(flow_prefix), "/install")])
+
+    build.docker.extract_files(base_id, files, os.path.join( os.getcwd(), flow_prefix))
+
+    build.util.make_enable(config, flow_prefix)
+    build.util.make_README(config, flow_prefix)
+    build.util.copy_data(data_path, "{}/testdata".format(flow_prefix))
+    tar_file = build.util.make_tarfile(flow_prefix)
+    print("Tar file: {} created".format(tar_file))
+    build.util.print_msg(tar_file)
+

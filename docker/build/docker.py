@@ -3,10 +3,18 @@ import os.path
 import shutil
 from . import util
 
+
+def run(image_id, mappings=[]):
+    cmd_string = "docker run "
+    for (host_path, container_path) in mappings:
+        cmd_string += "-v {}:{} ".format(host_path, container_path)
+    util.cmd("{} {}".format(cmd_string, image_id))
+
+
 def build(docker_file, tag = None):
     if tag is None:
         tag = os.path.basename(docker_file)
-    util.cmd("docker build -f {} -t {} .".format(docker_file, tag), verbose=True)
+    util.cmd("docker build -f {} -t {} .".format(docker_file, tag))
     return tag
 
 
@@ -30,7 +38,7 @@ COPY file_list.txt file_list.txt
 ENTRYPOINT ["./extract_files.py", "file_list.txt", "{}"]
 """.format(base_image, "/install"))
         build("extract")
-        util.cmd("docker run -v {}:/install extract".format(target_path), verbose = True)
+        run("extract", mappings=[(target_path, "/install")])
 
 
 
@@ -51,6 +59,8 @@ def find_layer(fetch_id, cmd_string):
             for arg in build_cmd:
                 if cmd_string in arg:
                     return path
+
+    raise ValueError("Could not find layer with {} in build_cmd".format(cmd_string))
 
 
 def prefix_usr(arg):

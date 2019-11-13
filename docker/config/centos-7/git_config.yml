@@ -1,6 +1,8 @@
-dockerfile:
+dockerfiles:
   base: git-image 
-  install: install
+  build: git-build
+
+build_script: build.sh
 
 os_image: "centos-7"
 mpi: false 

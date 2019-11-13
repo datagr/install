@@ -50,3 +50,37 @@ def make_tarfile(flow_prefix):
     shutil.copy(tar_file, "/tmp")
     return os.path.join("/tmp/", tar_file)
 
+
+def make_enable(config, flow_prefix):
+    template = open(config.enable_in).read()
+    with open("{}/enable".format(flow_prefix), "w") as f:
+        f.write(template.format(flow_prefix = flow_prefix))
+
+
+def make_README(config, flow_prefix):
+    template = open(config.readme_in).read()
+    with open("{}/README".format(flow_prefix), "w") as f:
+        f.write(template.format(version = config.version,
+                                flow_prefix = flow_prefix))
+
+
+def copy_data(src_path, target_path):
+    shutil.copytree(src_path, target_path)
+
+
+def print_msg(tar_file):
+    msg = """
+Push tar file to google storage:
+
+    gsutil cp {0} gs://datagr-export
+
+Make file public:
+
+    gsutil acl ch -u AllUsers:R gs://datagr-export/{1}
+
+URL:
+
+    https://storage.googleapis.com/datagr-export/{1}
+""".format(tar_file, os.path.basename(tar_file))
+    print(msg)
+

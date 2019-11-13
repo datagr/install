@@ -1,12 +1,23 @@
 FROM centos:7
+COPY build.sh build.sh
+
 RUN yum -y update
 RUN yum install -y centos-release-scl
 RUN yum install -y devtoolset-7
 RUN yum install -y cmake
 RUN yum install -y git
 RUN yum install -y epel-release
-RUN yum install -y boost boost-devel
-
+RUN yum install -y wget
+RUN yum install -y gcc-c++
 RUN yum-config-manager --add-repo https://www.opm-project.org/package/opm.repo
 RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-RUN yum install -y dune-common dune-geometry dune-grid dune-localfunctions
+RUN yum install -y boost-devel
+
+RUN wget https://dl.bintray.com/boostorg/release/1.66.0/source/boost_1_66_0.tar.gz
+RUN tar -xzvf boost_1_66_0.tar.gz
+WORKDIR boost_1_66_0
+RUN ./bootstrap.sh --prefix=/container/install --with-libraries=date_time,system,filesystem,regex,test
+RUN ./b2 install link=static -j 16
+WORKDIR /
+
+RUN yum install -y libquadmath dune-alugrid-devel dune-fem-devel dune-common-devel dune-geometry-devel dune-istl-devel dune-uggrid-devel dune-grid-devel dune-localfunctions-devel openblas-devel
