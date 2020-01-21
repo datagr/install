@@ -1,0 +1,9 @@
+FROM centos:7
+
+RUN yum install -y centos-release-scl
+RUN yum install -y epel-release
+RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+RUN yum-config-manager --add-repo https://www.opm-project.org/package/opm.repo
+
+RUN yum install -y blas-devel lapack-devel dune-common-devel git suitesparse-devel dune-istl-devel dune-geometry-devel dune-grid-devel openmpi-devel trilinos-openmpi-devel ptscotch-openmpi-devel scotch-devel zlib-devel cmake3 devtoolset-6 rh-mariadb102-boost-devel
+

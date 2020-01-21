@@ -1,0 +1,3 @@
+FROM build-env 
+COPY build-flow.sh build-flow.sh
+CMD ./build-flow.sh
