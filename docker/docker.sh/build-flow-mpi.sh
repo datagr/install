@@ -4,6 +4,7 @@ set -e
 source /opt/rh/devtoolset-6/enable
 source /etc/profile.d/modules.sh
 module load mpi/openmpi-x86_64
+install_prefix=/install
 
 pushd /build
 
@@ -12,7 +13,7 @@ mkdir -p build
 pushd build
 cmake3 .. \
       -DUSE_MPI=ON \
-      -DCMAKE_INSTALL_PREFIX=/install \
+      -DCMAKE_INSTALL_PREFIX=$install_prefix \
       -DUSE_RUNPATH=OFF \
       -DWITH_NATIVE=OFF \
       -DBUILD_TESTING=OFF \
@@ -31,7 +32,7 @@ mkdir -p build
 pushd build
 cmake3 .. \
        -DUSE_MPI=ON \
-       -DCMAKE_INSTALL_PREFIX=/install \
+       -DCMAKE_INSTALL_PREFIX=$install_prefix \
        -DUSE_RUNPATH=OFF \
        -DWITH_NATIVE=OFF \
        -DBUILD_TESTING=OFF \
@@ -50,7 +51,7 @@ mkdir -p build
 pushd build
 cmake3 .. \
        -DUSE_MPI=ON \
-       -DCMAKE_INSTALL_PREFIX=/install \
+       -DCMAKE_INSTALL_PREFIX=$install_prefix \
        -DUSE_RUNPATH=OFF \
        -DWITH_NATIVE=OFF \
        -DBUILD_TESTING=OFF \
@@ -74,7 +75,7 @@ mkdir -p build
 pushd build
 cmake3 .. \
        -DUSE_MPI=ON \
-       -DCMAKE_INSTALL_PREFIX=/install \
+       -DCMAKE_INSTALL_PREFIX=$install_prefix \
        -DUSE_RUNPATH=OFF \
        -DWITH_NATIVE=OFF \
        -DBUILD_TESTING=OFF \
@@ -98,7 +99,7 @@ mkdir -p build
 pushd build
 cmake3 .. \
        -DUSE_MPI=ON \
-       -DCMAKE_INSTALL_PREFIX=/install \
+       -DCMAKE_INSTALL_PREFIX=$install_prefix \
        -DUSE_RUNPATH=OFF \
        -DWITH_NATIVE=OFF \
        -DBUILD_TESTING=OFF \
