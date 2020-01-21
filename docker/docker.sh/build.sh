@@ -47,7 +47,7 @@ popd
 #-----------------------------------------------------------------------------------
 
 docker build -f dockerfiles/build-env -t build-env .
-docker build -f dockerfiles/builder -t builder .
+docker build -f dockerfiles/builder-mpi -t builder .
 mkdir -p $HOST_INSTALL_PREFIX
 docker run -v $HOST_INSTALL_PREFIX:/install -v $build_dir:/build -it builder
 
