@@ -55,7 +55,7 @@ cmake3 .. \
        -DCMAKE_BUILD_TYPE=Release \
        -DBUILD_SHARED_LIBS=OFF \
        -DBOOST_INCLUDEDIR=/opt/rh/rh-mariadb102/root/usr/include \
-       -DBOOST_LIBRARYDIR=/opt/rh/rh-mariadb102/root/usr/lib64 \
+       -DBOOST_LIBRARYDIR=/opt/rh/rh-mariadb102/root/usr/lib64
 make install -j 4
 popd
 popd
@@ -73,7 +73,7 @@ cmake3 .. \
        -DCMAKE_BUILD_TYPE=Release \
        -DBUILD_SHARED_LIBS=OFF \
        -DBOOST_INCLUDEDIR=/opt/rh/rh-mariadb102/root/usr/include \
-       -DBOOST_LIBRARYDIR=/opt/rh/rh-mariadb102/root/usr/lib64 \
+       -DBOOST_LIBRARYDIR=/opt/rh/rh-mariadb102/root/usr/lib64
 make install -j 4
 popd
 popd
@@ -91,7 +91,7 @@ cmake3 .. \
        -DCMAKE_BUILD_TYPE=Release \
        -DBUILD_SHARED_LIBS=OFF \
        -DBOOST_INCLUDEDIR=/opt/rh/rh-mariadb102/root/usr/include \
-       -DBOOST_LIBRARYDIR=/opt/rh/rh-mariadb102/root/usr/lib64 \
+       -DBOOST_LIBRARYDIR=/opt/rh/rh-mariadb102/root/usr/lib64
 make install -j 4
 popd
 popd
